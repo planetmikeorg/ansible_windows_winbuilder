@@ -1,12 +1,12 @@
 galaxy_info:
   author: Michael Cleary
   description: Deploy Windows WIM builder and provisioner
-  company: ClusterApps.com
-  role_name: win-builder
+  company: PlanetMikeOrg
+  role_name: win_builder
 
   license: MIT
 
-  min_ansible_version: 2.6
+  min_ansible_version: 2.9
 
   platforms:
   - name: Windows

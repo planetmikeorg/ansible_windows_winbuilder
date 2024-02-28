@@ -3,9 +3,7 @@ function GetWimArguments([string]$windowsVersion)
     $args = @()
     $args += '-wimFile "' + (Join-Path (Join-Path $sourceWimsPath $windowsVersion) "install.wim") + '"'
     $args += '-destination "' + (Join-Path $destinationPath $windowsVersion) + '"'
-    $args += '-updatesPath "' + [string]::Format($wsusUpdates, $windowsVersion.Replace('.', '')) + '"'
     $args += '-driversPath "' + (Join-Path $driversPath $windowsVersion) + '"'
-    
     return (" " + [String]::Join(" ", $args))
 }
 
@@ -18,18 +16,7 @@ function GetBootWimArguments()
     $args += '-destination "' + (Join-Path $destinationPath $windowsVersion $bootsubfolder) + '"'
     $args += '-driversPath "' + (Join-Path $driversPath $windowsVersion) + '"'
     $args += '-isBoot 1'
-    
     return (" " + [String]::Join(" ", $args))
-}
-
-function CheckUpdates([string]$windowsVersion)
-{
-    $process = Start-Process -FilePath (Join-Path $wsusRoot "cmd\DownloadUpdates.cmd") -ArgumentList @([string]::Format("w{0}-x64 glb", $windowsVersion.Replace('.', '')), "/verify") -Wait -PassThru;
-    $exitCode = $process.ExitCode
-    if ($exitCode -ne 0)
-    {
-        throw "Error downloading updates for Windows ${windowsVersion}, exit code was ${exitCode}"
-    }
 }
 
 function MountWim
@@ -80,6 +67,7 @@ function InjectAdkPackages
 
 function InjectBootFiles
 {
+    Write-Host "Boot Files" 
     foreach($path in (GetMountPaths))
     {       
         Write-Host "InjectBootFiles: Injecting boot files to ${path}"
@@ -100,6 +88,7 @@ function CopySourceWim
 
 function AddDrivers
 {
+    Write-Host "Add Drivers"  
     foreach($path in (GetMountPaths))
     {       
         Write-Host "AddDrivers: Adding drivers from ${driversPath} to ${path}"
@@ -107,14 +96,6 @@ function AddDrivers
     }
 }
 
-function ApplyUpdates
-{
-    foreach($path in (GetMountPaths))
-    {       
-        Write-Host "ApplyUpdates: Adding updates from ${updatesPath} to ${path}"
-        Add-WindowsPackage -Path $path -PackagePath $updatesPath -LogPath $dismlogPath
-    }
-}
 
 function ActivateWindowsFeatures
 {

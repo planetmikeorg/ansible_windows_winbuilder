@@ -1,0 +1,38 @@
+- name: Create mount directory
+  ansible.windows.win_file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ mount_dir }}\\core"
+    - "{{ mount_dir }}\\full"
+
+- name: Server Core file
+  ansible.windows.win_shell: >
+    dism /Mount-Wim /WimFile:"{{ wim_file_path }}" /index:1 /MountDir:"{{ mount_dir }}\core"
+
+- name: Inject drivers into Core
+  ansible.windows.win_shell: >
+    dism /Image:"{{ mount_dir }}\core" /Add-Driver /Driver:"{{ drivers_source_path }}" /Recurse
+  ignore_errors: yes  
+
+- name: Server Desktop Experiance file
+  ansible.windows.win_shell: >
+    dism /Mount-Wim /WimFile:"{{ wim_file_path }}" /index:2 /MountDir:"{{ mount_dir }}\full" 
+
+- name: Inject drivers into Desktop Experiance
+  ansible.windows.win_shell: >
+    dism /Image:"{{ mount_dir }}/full" /Add-Driver /Driver:"{{ drivers_source_path }}" /Recurse
+  ignore_errors: yes  
+
+- name: Unmount Core and commit changes
+  ansible.windows.win_shell: >
+    dism /Unmount-Wim /MountDir:"{{ mount_dir }}\core" /Commit
+
+- name: Unmount Desktop Experiance and commit changes
+  ansible.windows.win_shell: >
+    dism /Unmount-Wim /MountDir:"{{ mount_dir }}\full" /Commit
+
+- name: Remove mount directory
+  ansible.windows.win_file:
+    path: "{{ mount_dir }}"
+    state: absent
